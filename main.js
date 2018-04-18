@@ -47,7 +47,9 @@ camera.position.z = 5;
 
 var moveSpeed = 0.0001;
 var rotateSpeed = 0.05;
-var velocity = 0;
+var xVelocity = 0;
+var yVelocity = 0;
+var zVelocity = 0;
 var throttle = 0;
 var maxVelocity = 2;
 var maxThrottle = 10 * moveSpeed * 2;
@@ -94,10 +96,12 @@ function update() {
             throttle -= moveSpeed;
     }
 
-    velocity += throttle;
-
-    if (velocity > maxVelocity || velocity < -maxVelocity)
-        velocity = maxVelocity * Math.sign(velocity);
+    var direction = camera.getWorldDirection();
+    direction.normalize();
+    direction.multiplyScalar(throttle);
+    xVelocity += direction.x;
+    yVelocity += direction.y;
+    zVelocity += direction.z;
 
     if (throttle > maxThrottle || throttle < -maxThrottle)
         throttle = maxThrottle * Math.sign(throttle);
@@ -105,14 +109,22 @@ function update() {
     if (!(keys.w in keysDown) && !(keys.s in keysDown) && throttleChange)
         throttleChange = false;
     
-    camera.translateZ(-velocity);
+    camera.position.x += xVelocity;
+    camera.position.y += yVelocity;
+    camera.position.z += zVelocity;
 }
 
 function updateUI() {
-    var velocityElem = document.getElementById('velocity');
-    velocityElem.value = Math.floor(velocity * 100);
+    var speedElem = document.getElementById('speed');
+    var speed = Math.abs(xVelocity) + Math.abs(yVelocity) + Math.abs(zVelocity);
+    speedElem.value = Math.floor(speed * 100);
     var throttleElem = document.getElementById('throttle');
     throttleElem.value = Math.floor(throttle * 5000);
+    var headingElem = document.getElementById('heading');
+    var heading = (-camera.rotation.y + 3 * Math.PI / 2) * (180 / Math.PI);
+    if (camera.getWorldDirection().z > 0)
+        heading = (camera.rotation.y + Math.PI / 2) * (180 / Math.PI);
+    headingElem.value = heading;
     $('.dial').trigger('change');
 }
 

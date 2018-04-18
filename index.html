@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Flight</title>
+    <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="js/jquery.knob.min.js"></script>
+    <script src="js/three.min.js"></script>
+</head>
+<body>
+    <div id='right_sidebar' class='sidebar'>
+        <p>Velocity</p>
+        <input type="text" readOnly="true" value="0" id='velocity' class="dial" data-width="120" data-height="100" data-fgColor="#fff" data-bgColor="#000" data-angleOffset=-125 data-angleArc=250 data-min=-200 data-max=200></input>
+        <p>Throttle</p>
+        <input type="text" readOnly="true" value="0" id='throttle' class="dial" data-width="120" data-height="100" data-fgColor="#fff" data-bgColor="#000" data-angleOffset=-125 data-cursor=5 data-angleArc=250 data-min=-10 data-max=10></input>
+    </div>
+    <div id='three'></div>
+    <div class='sidebar'>
+            <p id='left_sidebar'>
+                W: Throttle Up <br />
+                S: Throttle Down <br />
+                A: Yaw Left <br />
+                D: Yaw Right <br />
+                Left: Roll Left <br />
+                Right: Roll Right <br />
+                Up: Pitch Down <br />
+                Down: Pitch Up <br />
+            </p>
+        </div>
+    <script src="main.js"></script>
+    <script>
+        $('.dial').knob();
+    </script>
+</body>
+</html>

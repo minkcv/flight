@@ -1,0 +1,36 @@
+html {
+    height: 100%;
+}
+
+body {
+    margin: 0px;
+    background-color: #2c2c2c;
+    overflow: hidden;
+    height: 100%;
+    font-family: monospace;
+    font-size: 16pt;
+}
+
+.sidebar {
+    color: #ffffff;
+    width: 20%;
+    float: left;
+    height: 100%;
+}
+#right_sidebar {
+    text-align: center;
+}
+
+#left_sidebar {
+    margin: 10px;
+}
+
+p {
+    margin: 5px;
+}
+
+#three {
+    float: left;
+    width: 60%;
+    height: 70%;
+}

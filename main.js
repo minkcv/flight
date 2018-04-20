@@ -72,7 +72,7 @@ var yVelocity = 0;
 var zVelocity = 0;
 var throttle = 0;
 var maxVelocity = 2;
-var maxThrottle = 10 * moveSpeed * 2;
+var maxThrottle = 50 * moveSpeed * 2;
 var throttleChange = false; // Stop when changing forward/reverse
 
 function updateCamera() {

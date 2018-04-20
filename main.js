@@ -9,9 +9,16 @@ renderer.setSize(width, height);
 threediv.appendChild(renderer.domElement);
 var geometry = new THREE.SphereGeometry( 0.1 );
 var material = new THREE.MeshBasicMaterial( { color: 0xffffff } );
+var cylinderGeometry = new THREE.CylinderGeometry( 1, 1, 0.1, 20, 1, true);
+var grayMaterial = new THREE.MeshPhongMaterial( {color: 0xcccccc, side: THREE.DoubleSide } );
+
+var light = new THREE.DirectionalLight( 0xffffff, 1.0 );
+light.position.set(1, 3, 2).normalize();
+light.isLight = true;
+scene.add( light );
 
 var keysDown = [];
-var keys = { up: 38, down: 40, right: 39, left: 37, a: 65, s: 83, d: 68, w: 87, shift: 16, r: 82, f: 70 }
+var keys = { up: 38, down: 40, right: 39, left: 37, a: 65, s: 83, d: 68, w: 87, shift: 16 }
 addEventListener("keydown", function(e) {
     Object.keys(keys).forEach(function(key) {
         if (keys[key] == e.keyCode) {
@@ -34,15 +41,28 @@ function createStars(sectorX, sectorY, sectorZ) {
     for (var x = centerX - range; x < centerX + range; x+=10) {
         for (var y = centerY - range; y < centerY + range; y+=10) {
             for (var z = centerZ - range; z < centerZ + range; z+=10) {
-                
-                var cube = new THREE.Mesh( geometry, material );
-                cube.position.x = x + Math.random() * 10;
-                cube.position.y = y + Math.random() * 10;
-                cube.position.z = z + Math.random() * 10;
-                scene.add( cube );
+                if (Math.random() < 0.001) {
+                    createHalo(x, y, z);
+                    continue;
+                }
+                var sphere = new THREE.Mesh( geometry, material );
+                sphere.position.x = x + Math.random() * 10;
+                sphere.position.y = y + Math.random() * 10;
+                sphere.position.z = z + Math.random() * 10;
+                scene.add( sphere );
             }
         }
     }
+}
+
+function createHalo(x, y, z) {
+    var cylinder = new THREE.Mesh( cylinderGeometry, grayMaterial );
+    cylinder.rotateZ(Math.random() - Math.random());
+    cylinder.rotateX(Math.random() - Math.random());
+    cylinder.position.x = x;
+    cylinder.position.y = y;
+    cylinder.position.z = z;
+    scene.add(cylinder);
 }
 
 var moveSpeed = 0.0001;
@@ -103,6 +123,10 @@ function updateCamera() {
     yVelocity += direction.y;
     zVelocity += direction.z;
 
+    xVelocity = Math.min(Math.abs(xVelocity), maxVelocity) * Math.sign(xVelocity);
+    yVelocity = Math.min(Math.abs(yVelocity), maxVelocity) * Math.sign(yVelocity);
+    zVelocity = Math.min(Math.abs(zVelocity), maxVelocity) * Math.sign(zVelocity);
+
     if (throttle > maxThrottle || throttle < -maxThrottle)
         throttle = maxThrottle * Math.sign(throttle);
 
@@ -143,7 +167,6 @@ function updateWorld() {
         var index = findSector(pos);
         if (index == -1) {
             sectors.push(pos);
-            console.log('creating stars');
             createStars(pos.x, pos.y, pos.z);
         }
     });
@@ -151,7 +174,6 @@ function updateWorld() {
     for (var i = 0; i < sectors.length; i++) {
         var s = sectors[i];
         if (Math.abs(s.x - x) > 1 || Math.abs(s.y - y) > 1 || Math.abs(s.z - z) > 1) {
-            console.log('removing sector');
             sectors[i] = sectors[sectors.length - 1];
             sectors.pop();
             i--;
@@ -160,8 +182,9 @@ function updateWorld() {
     
     for (var i = 0; i < scene.children.length; i++) {
         var obj = scene.children[i];
+        if (obj.isLight)
+            continue;
         if (obj.position.distanceTo(camera.position) > sectorSize * 3) {
-            console.log('removing star');
             scene.remove(obj);
         }
     }

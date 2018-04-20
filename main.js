@@ -3,7 +3,7 @@ var width = threediv.clientWidth;
 var height = threediv.clientHeight;
 var scene = new THREE.Scene();
 var scale = 3;
-var camera = new THREE.PerspectiveCamera( 75, width / height, 0.1, 100 );
+var camera = new THREE.PerspectiveCamera( 75, width / height, 0.1, 50 );
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize(width, height);
 threediv.appendChild(renderer.domElement);
@@ -25,12 +25,15 @@ addEventListener("keyup", function(e) {
     delete keysDown[e.keyCode];
 }, false);
 
-function createCubes() {
-    var min = -200;
-    var max = 200;
-    for (var x = min; x < max; x+=10) {
-        for (var y = min; y < max; y+=10) {
-            for (var z = min; z < max; z+=10) {
+
+function createStars(sectorX, sectorY, sectorZ) {
+    var centerX = sectorX * sectorSize;
+    var centerY = sectorY * sectorSize;
+    var centerZ = sectorZ * sectorSize;
+    var range = sectorSize / 2;
+    for (var x = centerX - range; x < centerX + range; x+=10) {
+        for (var y = centerY - range; y < centerY + range; y+=10) {
+            for (var z = centerZ - range; z < centerZ + range; z+=10) {
                 
                 var cube = new THREE.Mesh( geometry, material );
                 cube.position.x = x + Math.random() * 10;
@@ -41,9 +44,6 @@ function createCubes() {
         }
     }
 }
-createCubes();
-
-camera.position.z = 5;
 
 var moveSpeed = 0.0001;
 var rotateSpeed = 0.05;
@@ -55,7 +55,7 @@ var maxVelocity = 2;
 var maxThrottle = 10 * moveSpeed * 2;
 var throttleChange = false; // Stop when changing forward/reverse
 
-function update() {
+function updateCamera() {
     // Roll
     if (keys.right in keysDown) {
         camera.rotateZ(-rotateSpeed);
@@ -114,6 +114,60 @@ function update() {
     camera.position.z += zVelocity;
 }
 
+var sectorSize = 50;
+var sectors = [];
+
+function findSector(find) {
+    for (var i = 0; i < sectors.length; i++) {
+        var s = sectors[i];
+        if (s.x == find.x && s.y == find.y && s.z == find.z)
+            return i;
+    }
+    return -1;
+}
+
+function updateWorld() {
+    var x = Math.round(camera.position.x / sectorSize);
+    var y = Math.round(camera.position.y / sectorSize);
+    var z = Math.round(camera.position.z / sectorSize);
+    var around = [];
+    for (var ix = -1; ix < 2; ix++) {
+        for (var iy = -1; iy < 2; iy++) {
+            for (var iz = -1; iz < 2; iz++) {
+                around.push({x: x + ix, y: y + iy, z: z + iz});
+            }
+        }
+    }
+
+    around.forEach((pos) => {
+        var index = findSector(pos);
+        if (index == -1) {
+            sectors.push(pos);
+            console.log('creating stars');
+            createStars(pos.x, pos.y, pos.z);
+        }
+    });
+
+    for (var i = 0; i < sectors.length; i++) {
+        var s = sectors[i];
+        if (Math.abs(s.x - x) > 1 || Math.abs(s.y - y) > 1 || Math.abs(s.z - z) > 1) {
+            console.log('removing sector');
+            sectors[i] = sectors[sectors.length - 1];
+            sectors.pop();
+            i--;
+        }
+    }
+    
+    for (var i = 0; i < scene.children.length; i++) {
+        var obj = scene.children[i];
+        if (obj.position.distanceTo(camera.position) > sectorSize * 3) {
+            console.log('removing star');
+            scene.remove(obj);
+        }
+    }
+
+}
+
 function updateUI() {
     var speedElem = document.getElementById('speed');
     var speed = Math.abs(xVelocity) + Math.abs(yVelocity) + Math.abs(zVelocity);
@@ -131,7 +185,8 @@ function updateUI() {
 function animate() {
     requestAnimationFrame( animate );
 
-    update();
+    updateCamera();
+    updateWorld();
     updateUI();
 
     renderer.render( scene, camera );

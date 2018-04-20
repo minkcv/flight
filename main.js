@@ -67,9 +67,7 @@ function createHalo(x, y, z) {
 
 var moveSpeed = 0.0001;
 var rotateSpeed = 0.05;
-var xVelocity = 0;
-var yVelocity = 0;
-var zVelocity = 0;
+var velocity = new THREE.Vector3(0, 0, 0);
 var throttle = 0;
 var maxVelocity = 2;
 var maxThrottle = 50 * moveSpeed * 2;
@@ -119,13 +117,8 @@ function updateCamera() {
     var direction = camera.getWorldDirection();
     direction.normalize();
     direction.multiplyScalar(throttle);
-    xVelocity += direction.x;
-    yVelocity += direction.y;
-    zVelocity += direction.z;
-
-    xVelocity = Math.min(Math.abs(xVelocity), maxVelocity) * Math.sign(xVelocity);
-    yVelocity = Math.min(Math.abs(yVelocity), maxVelocity) * Math.sign(yVelocity);
-    zVelocity = Math.min(Math.abs(zVelocity), maxVelocity) * Math.sign(zVelocity);
+    velocity.add(direction);
+    velocity.clampLength(-maxVelocity, maxVelocity);
 
     if (throttle > maxThrottle || throttle < -maxThrottle)
         throttle = maxThrottle * Math.sign(throttle);
@@ -133,9 +126,9 @@ function updateCamera() {
     if (!(keys.w in keysDown) && !(keys.s in keysDown) && throttleChange)
         throttleChange = false;
     
-    camera.position.x += xVelocity;
-    camera.position.y += yVelocity;
-    camera.position.z += zVelocity;
+    camera.position.x += velocity.x;
+    camera.position.y += velocity.y;
+    camera.position.z += velocity.z;
 }
 
 var sectorSize = 50;
@@ -193,7 +186,7 @@ function updateWorld() {
 
 function updateUI() {
     var speedElem = document.getElementById('speed');
-    var speed = Math.abs(xVelocity) + Math.abs(yVelocity) + Math.abs(zVelocity);
+    var speed = velocity.length();
     speedElem.value = Math.floor(speed * 100);
     var throttleElem = document.getElementById('throttle');
     throttleElem.value = Math.floor(throttle * 5000);
